@@ -1,0 +1,26 @@
+Virtual Environment:
+
+python3 -m venv --without-pip .venv
+source .venv/bin/activate
+python get-pip.py
+
+Install dependencies:
+
+pip install -r requirements.txt
+
+Migrate database:
+
+Create models in models.py
+Set database URI in .env
+
+flask db init
+flask db migrate -m "comentario"
+flask db upgrade
+
+Deploy:
+
+fly launch
+
+Set SECRETS in fly.io
+
+fly deploy
