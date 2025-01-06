@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ actividad }}{% endblock %}
+
+{% block content %}
+
+<h1>{{ actividad }}</h1>
+    {% for tarea in detalle_actividad %}
+    <ul><li>{{ tarea }}</li></ul>
+    {% endfor%}
+
+{% endblock %}

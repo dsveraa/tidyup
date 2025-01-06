@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for
 from . import db
-# from .models import Usuario, Profesional, Cita
+from .models import *
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from colorama import Fore, Style
@@ -12,7 +12,7 @@ import pytz
 colors = [Fore.CYAN, Fore.GREEN]
 last_color = None
 
-def print(message):
+def printn(message):
     global last_color
     frame = inspect.currentframe()
     info = inspect.getframeinfo(frame.f_back)
@@ -30,36 +30,49 @@ def process_datetime(client_timezone, datetime_obj):
     return date_local, utc_iso_format
 
 def register_routes(app):
+    
+    @app.route('/agenda/<responsable_id>')
+    def agenda(responsable_id):
+        responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
+        responsable_nombre = responsable.responsable.nombre        
+        
+        agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).all()
+        actividades = []
+
+        for item in agenda_obj:
+            if item.actividad.nombre not in actividades:
+                actividades.append(item.actividad.nombre)
+
+        dias_semana = ['dom', 'lun', 'mar', 'mier', 'jue', 'vie', 'sab']
+        completado = {}
+
+        for dia_id, nombre_dia in enumerate(dias_semana, start=1):
+            agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id, dia_id=dia_id).all()
+            
+            completado[nombre_dia] = []
+            
+            for item in agenda_obj:
+                completado[nombre_dia].append(item.completado)
+
+        printn(completado)
+
+        return render_template("agenda.html", responsable=responsable_nombre, responsable_id=responsable_id, actividades=actividades, completado=completado)
+    
+    @app.route('/detalle/<actividad_id>')
+    def detalle_actividad(actividad_id):
+        actividad = DetalleActividad.query.filter_by(actividad_id=actividad_id).first()
+        actividad_titulo = actividad.actividad.nombre
+        
+        detalle_actividad_obj = DetalleActividad.query.filter_by(actividad_id=actividad_id).all()
+        detalle_actividad = []
+        
+        for actividad in detalle_actividad_obj:
+            detalle_actividad.append(actividad.tarea.nombre)
+
+        return render_template("detalle_actividad.html", actividad=actividad_titulo, detalle_actividad=detalle_actividad)
+    
     @app.route('/')
     def index():
-        return "Bienvenido a la página principal"
-
-    # @app.route('/usuarios')
-    # def listar_usuarios():
-    #     usuarios = Usuario.query.all()  # Obtener todos los usuarios desde la base de datos
-    #     return render_template('usuarios.html', usuarios=usuarios)  # Renderizar la plantilla
-
-    # # Ruta para agregar un nuevo usuario
-    # @app.route('/usuarios/nuevo', methods=['GET', 'POST'])
-    # def agregar_usuario():
-    #     if request.method == 'POST':
-    #         nombre = request.form['nombre']
-    #         apellido = request.form['apellido']
-    #         rut = request.form['rut']
-    #         email = request.form['email']
-    #         telefono = request.form['telefono']
-            
-    #         # Crear y guardar un nuevo usuario en la base de datos
-    #         nuevo_usuario = Usuario(nombre=nombre, apellido=apellido, rut=rut, email=email, telefono=telefono)
-    #         db.session.add(nuevo_usuario)
-    #         db.session.commit()
-            
-    #         return redirect(url_for('listar_usuarios'))  # Redirigir a la lista de usuarios
-
-    #     return render_template('nuevo_usuario.html')  # Mostrar el formulario de nuevo usuario
-
-    # # Ruta para ver los detalles de una cita
-    # @app.route('/citas/<int:cita_id>')
-    # def ver_cita(cita_id):
-    #     cita = Cita.query.get_or_404(cita_id)  # Obtener la cita por ID
-    #     return render_template('detalle_cita.html', cita=cita)
+        
+        return render_template("index.html")
+    
