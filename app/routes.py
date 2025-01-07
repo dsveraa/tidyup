@@ -62,7 +62,7 @@ def register_routes(app):
         
         for dia_id, tareas in dias.items():
             dia_nombre = dias_nombre[dia_id]
-            data[dia_nombre] = tareas
+            datos[dia_nombre] = tareas
 
         # printn(data)
 
