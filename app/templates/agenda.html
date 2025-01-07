@@ -7,8 +7,11 @@
 .special-margin {
     margin-bottom: 6.5px;
 }
+.cursor-pointer {
+    cursor: pointer;
+}
 </style>
-<h1>{{ responsable }}</h1>
+<h4 class="mt-4">{{ responsable }}</h4>
 <div class="d-flex">
 <div>
     <p>actividad</p>
@@ -22,7 +25,7 @@
     <div class="d-flex flex-column px-3" style="width: 40px;">
         <p>{{ dia }}</p>
         {% for item in datos %}
-        <div id="{{item.id}}">
+        <div id="{{item.id}}" class="cursor-pointer" onclick="enviarId(this.id)">
             {% if item.dato == True %}
             <iconify-icon icon="humbleicons:check-circle" width="24" height="24"></iconify-icon>
             {% else %}
@@ -33,5 +36,32 @@
     </div>
     {% endfor %}
 </div>
+
+<script>
+    function enviarId(id) {
+        fetch(`/cambiar_estado/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const div = document.getElementById(id);
+                const icon = div.querySelector('iconify-icon');
+                if (data.new_state) {
+                    icon.setAttribute('icon', 'humbleicons:check-circle');
+                } else {
+                    icon.setAttribute('icon', 'humbleicons:circle');
+                }
+            } else {
+                console.error(data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
 
 {% endblock %}

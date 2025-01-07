@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for
+from flask import jsonify, render_template, request, redirect, url_for
 from sqlalchemy import desc
 from . import db
 from .models import *
@@ -31,6 +31,17 @@ def process_datetime(client_timezone, datetime_obj):
     return date_local, utc_iso_format
 
 def register_routes(app):
+    @app.route('/cambiar_estado/<item_id>', methods=["POST"])
+    def cambiar_estado(item_id):
+        printn("hola")
+        item_obj = Agenda.query.filter_by(id=item_id).first()
+        
+        if item_obj:
+            item_obj.completado = not item_obj.completado
+            db.session.commit()
+            return jsonify({"success": True, "new_state": item_obj.completado})
+        return jsonify({"success": False, "error": "Item no encontrado"}), 404
+    
     @app.route('/agenda/<responsable_id>')
     def agenda(responsable_id):
         responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
