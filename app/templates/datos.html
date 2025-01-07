@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Agenda de {{ responsable }}{% endblock %}
+
+{% block content %}
+
+<h1>{{ responsable }}</h1>
+    <div class="d-flex gap-2">
+        <div>
+            <p>actividad</p>
+            {% for item in actividades %}
+            <ul class="list-unstyled"><li>{{ item }}</li></ul>
+            {% endfor%}
+        </div>
+    
+        {% for dia, valores in completado.items()%}
+        <div>
+            <p>{{ dia }}</p>
+            {% for valor in valores %}
+            <ul class="list-unstyled">
+                <li>{{ valor }}</li>
+            </ul>
+            {% endfor %}
+        </div>    
+        {% endfor %}
+    </div>
+
+{% endblock %}

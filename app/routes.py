@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for
+from sqlalchemy import desc
 from . import db
 from .models import *
 from datetime import datetime
@@ -30,13 +31,43 @@ def process_datetime(client_timezone, datetime_obj):
     return date_local, utc_iso_format
 
 def register_routes(app):
-    
+    @app.route('/datos/<responsable_id>')
+    def datos(responsable_id):
+        agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).order_by(Agenda.id).all()
+
+        ids = [] # <--- id de cada agenda ( responsable - actividad - dia - completado )
+        dias = {}
+
+        for item in agenda_obj:
+            if item.id not in ids:
+                ids.append(item.id)
+
+            dia_nombre = item.dia_id
+            if dia_nombre not in dias:
+                dias[dia_nombre] = []
+            dias[dia_nombre].append({'id': item.id, 'dato': item.completado})
+
+        # printn(ids)
+        printn(dias)
+
+        dias_nombre = {1: 'dom', 2: 'lun', 3: 'mar', 4: 'mie', 5: 'jue', 6: 'vie', 7: 'sab'}
+
+        data = {}
+        
+        for dia_id, tareas in dias.items():
+            dia_nombre = dias_nombre[dia_id]
+            data[dia_nombre] = tareas
+
+        printn(data)
+
+        return data
+
     @app.route('/agenda/<responsable_id>')
     def agenda(responsable_id):
         responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
         responsable_nombre = responsable.responsable.nombre        
         
-        agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).all()
+        agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).order_by(Agenda.id).all()
         actividades = []
 
         for item in agenda_obj:
@@ -63,7 +94,7 @@ def register_routes(app):
         actividad = DetalleActividad.query.filter_by(actividad_id=actividad_id).first()
         actividad_titulo = actividad.actividad.nombre
         
-        detalle_actividad_obj = DetalleActividad.query.filter_by(actividad_id=actividad_id).all()
+        detalle_actividad_obj = DetalleActividad.query.filter_by(actividad_id=actividad_id).order_by(desc(DetalleActividad.id)).all()
         detalle_actividad = []
         
         for actividad in detalle_actividad_obj:
@@ -75,4 +106,6 @@ def register_routes(app):
     def index():
         
         return render_template("index.html")
-    
+
+
+data = {'lun': [{'id': 1, 'dato': True}, {'id': 2, 'dato': True}, {'id': 3, 'dato': True}], 'mar': [{'id': 4, 'dato': False}, {'id': 5, 'dato': False},{'id': 6, 'dato': False}]}

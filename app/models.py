@@ -45,7 +45,7 @@ class Agenda(db.Model):
     
     responsable = relationship('Responsable', back_populates='agendas')
     actividad = relationship('Actividad', back_populates='agendas')
-
+    
     Index('idx_responsable_actividad_dia', 'responsable_id', 'actividad_id', 'dia_id')
     
 
