@@ -31,12 +31,22 @@ def process_datetime(client_timezone, datetime_obj):
     return date_local, utc_iso_format
 
 def register_routes(app):
-    @app.route('/datos/<responsable_id>')
-    def datos(responsable_id):
+    @app.route('/agenda/<responsable_id>')
+    def agenda(responsable_id):
+        responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
+        responsable_nombre = responsable.responsable.nombre
+
         agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).order_by(Agenda.id).all()
+
+        actividades = []
+
+        for item in agenda_obj:
+            if item.actividad.nombre not in actividades:
+                actividades.append(item.actividad.nombre)
 
         ids = [] # <--- id de cada agenda ( responsable - actividad - dia - completado )
         dias = {}
+        datos = {}
 
         for item in agenda_obj:
             if item.id not in ids:
@@ -47,48 +57,17 @@ def register_routes(app):
                 dias[dia_nombre] = []
             dias[dia_nombre].append({'id': item.id, 'dato': item.completado})
 
-        # printn(ids)
-        printn(dias)
-
         dias_nombre = {1: 'dom', 2: 'lun', 3: 'mar', 4: 'mie', 5: 'jue', 6: 'vie', 7: 'sab'}
 
-        data = {}
         
         for dia_id, tareas in dias.items():
             dia_nombre = dias_nombre[dia_id]
             data[dia_nombre] = tareas
 
-        printn(data)
+        # printn(data)
 
-        return data
+        return render_template("agenda.html", data=datos, responsable=responsable_nombre, actividades=actividades)
 
-    @app.route('/agenda/<responsable_id>')
-    def agenda(responsable_id):
-        responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
-        responsable_nombre = responsable.responsable.nombre        
-        
-        agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id).order_by(Agenda.id).all()
-        actividades = []
-
-        for item in agenda_obj:
-            if item.actividad.nombre not in actividades:
-                actividades.append(item.actividad.nombre)
-
-        dias_semana = ['dom', 'lun', 'mar', 'mier', 'jue', 'vie', 'sab']
-        completado = {}
-
-        for dia_id, nombre_dia in enumerate(dias_semana, start=1):
-            agenda_obj = Agenda.query.filter_by(responsable_id=responsable_id, dia_id=dia_id).all()
-            
-            completado[nombre_dia] = []
-            
-            for item in agenda_obj:
-                completado[nombre_dia].append(item.completado)
-
-        printn(completado)
-
-        return render_template("agenda.html", responsable=responsable_nombre, responsable_id=responsable_id, actividades=actividades, completado=completado)
-    
     @app.route('/detalle/<actividad_id>')
     def detalle_actividad(actividad_id):
         actividad = DetalleActividad.query.filter_by(actividad_id=actividad_id).first()
