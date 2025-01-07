@@ -85,6 +85,3 @@ def register_routes(app):
     def index():
         
         return render_template("index.html")
-
-
-data = {'lun': [{'id': 1, 'dato': True}, {'id': 2, 'dato': True}, {'id': 3, 'dato': True}], 'mar': [{'id': 4, 'dato': False}, {'id': 5, 'dato': False},{'id': 6, 'dato': False}]}
