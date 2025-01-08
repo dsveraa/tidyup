@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, request, redirect, url_for
+from flask import jsonify, render_template, request, redirect, url_for, session
 from sqlalchemy import desc
 from . import db
 from .models import *
@@ -31,9 +31,26 @@ def process_datetime(client_timezone, datetime_obj):
     return date_local, utc_iso_format
 
 def register_routes(app):
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if request.method == "POST":
+            input_user = request.form["name"]
+            input_password = request.form["password"]
+            db_user_obj = User.query.filter_by(name=input_user).first()
+            user = db_user_obj.name
+            password = db_user_obj.password
+            if input_user == user and input_password == password:
+                session["user_id"] = db_user_obj.id
+                session["user_name"] = db_user_obj.name
+                session.permanent = True
+                return redirect(url_for("index"))
+            else:
+                return "Error en el usuario o contraseña"
+        return render_template("login.html")
+    
     @app.route('/cambiar_estado/<item_id>', methods=["POST"])
     def cambiar_estado(item_id):
-        printn("hola")
+        # printn("hola")
         item_obj = Agenda.query.filter_by(id=item_id).first()
         
         if item_obj:
@@ -44,6 +61,9 @@ def register_routes(app):
     
     @app.route('/agenda/<responsable_id>')
     def agenda(responsable_id):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        
         responsable = Agenda.query.filter_by(responsable_id=responsable_id).first()
         responsable_nombre = responsable.responsable.nombre
 
@@ -81,6 +101,9 @@ def register_routes(app):
 
     @app.route('/detalle/<actividad_id>')
     def detalle_actividad(actividad_id):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        
         actividad = DetalleActividad.query.filter_by(actividad_id=actividad_id).first()
         actividad_titulo = actividad.actividad.nombre
         
@@ -92,7 +115,14 @@ def register_routes(app):
 
         return render_template("detalle_actividad.html", actividad=actividad_titulo, detalle_actividad=detalle_actividad)
     
+    @app.route("/logout")
+    def logout():
+        session.pop("user_id", None)
+        session.pop("user_name", None)
+        return redirect(url_for("index"))
+
     @app.route('/')
     def index():
-        
+        if "user_id" not in session:
+            return redirect(url_for("login"))
         return render_template("index.html")

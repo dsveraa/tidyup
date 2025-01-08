@@ -58,3 +58,8 @@ class DetalleActividad(db.Model):
 
     actividad = relationship('Actividad', back_populates='detalle_actividades')
     tarea = relationship('Tarea', back_populates='detalle_actividades')
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
