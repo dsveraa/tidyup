@@ -22,9 +22,11 @@
     </div>
 </div>
     {% for dia, datos in data.items() %}
+    <!-- se itera el diccionario, rescatando la clave (el día de la semana) y el valor (la lista de diccionarios) -->
     <div class="d-flex flex-column px-3" style="width: 40px;">
         <p>{{ dia }}</p>
         {% for item in datos %}
+        <!-- se itera cada diccionario de la lista rescatando el 'id' y el 'dato' (boolean) -->
         <div id="{{item.id}}" class="cursor-pointer" onclick="enviarId(this.id)">
             {% if item.dato == True %}
             <iconify-icon icon="humbleicons:check-circle" width="24" height="24"></iconify-icon>
@@ -39,6 +41,14 @@
 
 <script>
     function enviarId(id) {
+        const div = document.getElementById(id);
+        const icon = div.querySelector('iconify-icon');
+
+        const iconoOriginal = icon.getAttribute('icon');
+        const nuevoIcono = iconoOriginal === 'humbleicons:check-circle' ? 'humbleicons:circle' : 'humbleicons:check-circle';
+
+        icon.setAttribute('icon', nuevoIcono);
+
         fetch(`/cambiar_estado/${id}`, {
             method: 'POST',
             headers: {
@@ -47,21 +57,18 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                const div = document.getElementById(id);
-                const icon = div.querySelector('iconify-icon');
-                if (data.new_state) {
-                    icon.setAttribute('icon', 'humbleicons:check-circle');
-                } else {
-                    icon.setAttribute('icon', 'humbleicons:circle');
-                }
-            } else {
+            if (!data.success) {
+                // Si hubo un error, revertir el icono al estado original
+                icon.setAttribute('icon', iconoOriginal);
                 console.error(data.error);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            // Si la solicitud falla, revertir el icono al estado original
+            icon.setAttribute('icon', iconoOriginal);
+            console.error('Error:', error);
+        });
     }
 </script>
-
 
 {% endblock %}

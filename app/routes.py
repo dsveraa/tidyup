@@ -2,33 +2,9 @@ from flask import jsonify, render_template, request, redirect, url_for, session
 from sqlalchemy import desc
 from . import db
 from .models import *
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from colorama import Fore, Style
-from pytz import timezone, UTC
-import inspect
-import random
-import pytz
-
-colors = [Fore.CYAN, Fore.GREEN]
-last_color = None
-
-def printn(message):
-    global last_color
-    frame = inspect.currentframe()
-    info = inspect.getframeinfo(frame.f_back)
-    new_color = random.choice([color for color in colors if color != last_color])
-    last_color = new_color
-    print(f"{new_color}[{info.lineno - 1}] {message}{Style.RESET_ALL}")
-
-def process_datetime(client_timezone, datetime_obj):
-    client_tz = pytz.timezone(client_timezone)
-    client_datetime_tz = client_tz.localize(datetime_obj)
-    client_datetime_utc = client_datetime_tz.astimezone(pytz.utc)   
-    client_datetime_local = client_datetime_utc.astimezone(client_tz)
-    date_local=client_datetime_local.isoformat()
-    utc_iso_format = client_datetime_utc.isoformat()
-    return date_local, utc_iso_format
+from app.utils.debugging import printn
+import json
+import pprint
 
 def register_routes(app):
     @app.route("/login", methods=["GET", "POST"])
@@ -61,6 +37,28 @@ def register_routes(app):
     
     @app.route('/agenda/<responsable_id>')
     def agenda(responsable_id):
+        '''
+        devuelve un diccionario con clave 'dia de la semana' y valor de una lista de diccionarios.
+
+        la lista de diccionarios tiene como primera clave: 'dato' y valor boolean. Y como segunda
+        clave: 'id' y valor 'el id del dato'.
+
+        Ejemplo:
+
+        {
+            'dom': [
+                {'dato': False, 'id': 1},
+                {'dato': True, 'id': 2},
+                {'dato': False, 'id': 3},
+                {'dato': False, 'id': 4},
+                {'dato': False, 'id': 5},
+                {'dato': False, 'id': 6},
+                {'dato': False, 'id': 7}
+                ],
+                ...
+        }
+
+        '''
         if "user_id" not in session:
             return redirect(url_for("login"))
         
@@ -95,7 +93,9 @@ def register_routes(app):
             dia_nombre = dias_nombre[dia_id]
             datos[dia_nombre] = tareas
 
-        # printn(data)
+        # printn(datos)
+        # printn(json.dumps(datos, indent=4, ensure_ascii=False))
+        pprint.pprint(datos)
 
         return render_template("agenda.html", data=datos, responsable=responsable_nombre, actividades=actividades)
 
